@@ -20,6 +20,8 @@ import (
 	"strings"
 	"time"
 
+	"encoding/xml"
+
 	"github.com/pquerna/ffjson/ffjson"
 	"golang.org/x/net/websocket"
 )
@@ -91,6 +93,35 @@ func (ctx *Context) JSON(data interface{}, code ...int) {
 		return
 	}
 	ctx.Abort(500, fmt.Sprintf("Server error:%s", err.Error()))
+}
+
+// GetBody 获取当前请求body区的数据
+func (ctx *Context) GetBody() ([]byte, error) {
+	return ioutil.ReadAll(ctx.Request.Body)
+}
+
+// GetBodyToStruct 将请求过来的body的数据转换到对象中
+// rs 为转换后需要将数据存储到的对象的引用。format为body区的格式，接受xml,json，
+// 默认为json
+func (ctx *Context) GetBodyToStruct(rs interface{}, format ...string) error {
+	if len(format) == 0 {
+		format[0] = "json"
+	}
+
+	body, err := ctx.GetBody()
+
+	if err != nil {
+		return err
+	}
+
+	if format[0] == "json" {
+		err = ffjson.Unmarshal(body, rs)
+	}
+
+	if format[0] == "xml" {
+		err = xml.Unmarshal(body, rs)
+	}
+	return err
 }
 
 // ContentType sets the Content-Type header for an HTTP response.
