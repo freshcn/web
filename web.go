@@ -77,10 +77,16 @@ func (ctx *Context) Forbidden() {
 	ctx.ResponseWriter.WriteHeader(403)
 }
 
-// JSON 按json格式进行数据返回
-func (ctx *Context) JSON(data interface{}) {
+// JSON 按json格式进行数据返回 data是要向客户端发送的程序
+// code 为可设置的错误代码
+func (ctx *Context) JSON(data interface{}, code ...int) {
 	JSON, err := ffjson.Marshal(&data)
 	if err == nil {
+		if len(code) > 0 {
+			ctx.ResponseWriter.WriteHeader(code[0])
+		} else if _, ok := data.(error); ok {
+			ctx.ResponseWriter.WriteHeader(http.StatusBadRequest)
+		}
 		ctx.ResponseWriter.Write(JSON)
 		return
 	}
