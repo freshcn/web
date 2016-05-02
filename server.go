@@ -17,6 +17,8 @@ import (
 	"strings"
 	"time"
 
+	"sync"
+
 	"golang.org/x/net/websocket"
 )
 
@@ -36,6 +38,7 @@ type ServerConfig struct {
 	Profiler     bool
 	OnStart      OnStart
 	OnEnd        OnEnd
+	WaitGroup    sync.WaitGroup
 }
 
 // Server represents a web.go server.
@@ -375,7 +378,9 @@ func (s *Server) routeHandler(req *http.Request, w http.ResponseWriter) (unused 
 			}
 		}
 
+		s.Config.WaitGroup.Add(1)
 		ret, err := s.safelyCall(route.handler, args)
+		s.Config.WaitGroup.Done()
 
 		// 在之后运行后执函数
 		if s.Config.OnEnd != nil {
