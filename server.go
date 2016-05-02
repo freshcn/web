@@ -21,7 +21,7 @@ import (
 )
 
 // OnStart 处理函数运行之前运行
-type OnStart func(*Context)
+type OnStart func(*Context) bool
 
 // OnEnd 处理函数运行之后运行
 type OnEnd func(*Context)
@@ -369,7 +369,10 @@ func (s *Server) routeHandler(req *http.Request, w http.ResponseWriter) (unused 
 
 		// 在开始之前运行前执函数
 		if s.Config.OnStart != nil {
-			s.Config.OnStart(&ctx)
+			b := s.Config.OnStart(&ctx)
+			if !b {
+				return
+			}
 		}
 
 		ret, err := s.safelyCall(route.handler, args)
